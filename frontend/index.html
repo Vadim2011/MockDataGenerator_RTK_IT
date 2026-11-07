@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width">
+    <meta name="description" content="Проект генерация данных">
+    <link rel="shortcut icon" href="img/favicon.png" type="image/x-icon">
+    <link rel="stylesheet" href="style/style.css">
+    <script src="js/main.js" defer></script>
+    <title>Проект генерация данных</title>
+  </head>
+<body>
+  <div class="wrapper">
+    <header class="header">
+      <div class="header__logo logo">
+        <a href="/"><img class="logo__img" src="img/MDG _logo.svg" alt="logo"></a>
+      </div>
+      <div class="header__title">
+        <span> Учебный проект, по генерации данных для БД</span><br>
+        <span>Введите логин, если хотите сохраненить историю для другого пользователя</span><br>
+        <span>(по умолчанию пользователь test_user)</span>
+      </div>
+      <div class="header__login login">
+        <div class="login__items">
+          <div class="login__item">
+            <span>Логин&ensp;</span><br>      
+            <input type="text" name="login" id="login" value="test_user">
+          </div>
+        </div>
+      </div>
+    </header>
+
+      <div class="container">
+        <main class="main">
+          <div class="title">
+            <h1 class="title__hero">
+              <span>Система для генерации случайных тестовых данных</span><br>
+              <span>проект в рамках образовательной программы РТК ИТ</span>
+
+            </h1>
+          </div>
+          <h2 class="subtitle">Нажмите на кнопки, чтобы выбрать данные которые будут сгенерированы</h2>    
+
+          <div class="menu-data">
+              <button class="surname" data-switch="on">
+                ФАМИЛИЯ
+              </button>
+              <button class="first-name" data-switch="on">
+                ИМЯ
+              </button>
+              <button class="patronymic" data-switch="on">
+                ОТЧЕСТВО
+              </button>
+              <button class="email" data-switch="on">
+                ЭЛ. ПОЧТА
+              </button>
+              <button class="phone" data-switch="on">
+                ТЕЛЕФОН
+              </button>
+              <button class="address" data-switch="on">
+                АДРЕС
+              </button>
+
+              <div>
+                
+                <input type="number" min="1" max="100" step="1" class="count-item" value="3"><br>
+                <span>Количество строк</span>
+              </div>              
+              <div></div>
+              <div></div>
+              <div>
+                <label class="flex">
+                  <input type="radio" name="email" value="email-gen" checked><span>Генерация</span><br>
+                </label>
+                <label class="flex">
+                  <input type="radio" name="email" value="email-db"><span>Из БД</span><br>
+                </label>
+                <label class="flex">
+                  <input type="radio" name="email" value="email-name"><span>Из ФИО</span><br>
+                </label>
+              </div>
+              <div>
+                <label class="flex">
+                  <input type="radio" name="phone" value="phone-gen" checked><span>Генерация</span><br>
+                </label>
+                <label class="flex">
+                  <input type="radio" name="phone" value="phone-db"><span>Из БД</span><br>
+                </label>
+              </div>
+              <div>
+                <label class="flex">
+                  <input type="checkbox" name="city" value="city" checked><span>Город</span><br>
+                </label>
+                <label class="flex">
+                  <input type="checkbox" name="street" value="street" checked><span>Улица</span><br>
+                </label>
+                <label class="flex">
+                  <input type="checkbox" name="home" value="home" checked><span>Дом</span><br>
+                </label>
+                <label class="flex">
+                  <input type="checkbox" name="aparment" value="aparment" checked><span>Квартира</span><br>
+                </label>
+              </div>
+          </div>
+
+          <div class="example-data">
+            <h2 class="subtitle example-data__title">Пример выходных данных</h2>
+            <div class="example-data__items">
+              <div>
+                <div class="example-data__item surname" id="surname">
+                  <div class="example-surname">Иванов</div>
+                  <div class="example-surname">Петров</div>
+                  <div class="example-surname">Сидоров</div>
+                </div>
+              </div>
+              <div>
+                <div class="example-data__item" id="first-name">
+                  <div class="example-surname">Иван</div>
+                  <div class="example-surname">Петр</div>
+                  <div class="example-surname">Сидор</div>
+                </div>
+              </div>
+              <div>
+                <div class="example-data__item" id="patronymic">
+                  <div class="example-surname">Иванович</div>
+                  <div class="example-surname">Петрович</div>
+                  <div class="example-surname">Сидорович</div>
+                </div>
+              </div>
+              <div>
+                <div class="example-data__item" id="email">
+                  <div class="example-surname">aaa@mail.ru</div>
+                  <div class="example-surname">bbb@mail.ru</div>
+                  <div class="example-surname">acccaa@mail.ru</div>
+                </div>
+              </div>
+              <div>
+                <div class="example-data__item" id="phone">
+                  <div class="example-surname">8 900 123 33 22</div>
+                  <div class="example-surname">8 900 123 33 44</div>
+                  <div class="example-surname">8 900 123 33 66</div>
+                </div>
+              </div>
+              <div>              
+                <div class="example-data__item" id="address">
+                  <div class="example-surname">Москва, Ленина, 10, 21</div>
+                  <div class="example-surname">СПб, Пушкина, 8, 12</div>
+                  <div class="example-surname">Иркутск, Гоголя, 3, 17</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="get-data">
+            <div class="get-data__items">
+
+              <div class="get-data__format">
+                <div class="get-data__format--csv">
+                  <label>
+                    <input type="radio" name="format" value="csv" checked>
+                    <span>csv</span>
+                  </label>
+                </div>              
+                <div class="get-data__format--json">
+                  <label>
+                    <input type="radio" name="format" value="json">
+                    <span>json</span>
+                  </label>
+                </div>
+              </div>
+              <button type="submit" class="submit">Скачать</button>
+              <button type="submit" class="submit">История</button>
+            </div>
+          </div>
+
+
+        </main>
+      </div>
+
+        <footer class="footer">
+          <div class="footer__copy">&copy; Николаев Вадим Александрович РТК ИТ</div>
+        </footer>
+  </div>
+
+
+</body>
+</html>
