@@ -1,0 +1,7 @@
+{
+  "id": 67890,
+  "name": "Алексей Иванов",
+  "email": "alexey@example.com",
+  "is_active": true,
+  "age": 29
+}
