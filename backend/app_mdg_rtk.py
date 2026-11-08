@@ -1,11 +1,11 @@
-import os, csv, json
+import os, csv, json, random, string
 from datetime import datetime
 
 from flask import Flask, render_template, url_for, request, flash, redirect, session, make_response, jsonify, send_file 
 import mimetypes
 import psycopg2
 from io import StringIO, BytesIO
-
+from transliterate import translit
 
 
 app = Flask(__name__)
@@ -19,41 +19,165 @@ def get_connect_db():
                           user='rtkuser',
                           password='rtkuser')
   return conn
-# send_file(
-#     path_or_file: 'os.PathLike[t.AnyStr] | str | t.IO[bytes]',
-#     mimetype: 'str | None' = None,
-#     as_attachment: 'bool' = False,
-#     download_name: 'str | None' = None,
-#     conditional: 'bool' = True,
-#     etag: 'bool | str' = True,
-#     last_modified: 'datetime | int | float | None' = None,
-#     max_age: 'None | (int | t.Callable[[str | None], int | None])' = None    
-# )
+
+
+def generate_emale_random(alphabet='aasdfqwer', domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru'], lenght_min=4, lenght_max=12):
+    """
+        documentation     
+        generate_emale_random(alphabet='aasdfqwer', domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru'], lenght_min=4, lenght_max=12)
+    """
+
+    alphabet = string.ascii_lowercase
+    username = "".join(random.choice(alphabet) for _ in range(random.randint(lenght_min, lenght_max)))
+    domain = random.choice(domain)
+    return f"{username}@{domain}"
+
+
+def generate_emale_name(first_name, surname,domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru']):
+    """
+        documentation     
+        generate_emale_name(first_name, surname,domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru'])
+    """
+
+    f_name = translit(first_name.lower(), "ru", reversed=True)
+    surname = translit(surname.lower(), "ru", reversed=True)
+
+    # Убираем лишние пробелы и спецсимволы
+    f_name = "".join(e for e in f_name if e.isalnum())
+    surname = "".join(e for e in surname if e.isalnum())
+
+    f_name = f_name[:random.randint(1, len(f_name))]
+    domain = random.choice(domain)
+
+    return  f"{f_name}.{surname}@{domain}"
+
+
+def generate_phone_random():
+    """
+      documentation     
+      generate_phone_random()
+    """
+
+    phone_number = '8 9' + str(random.randint(0, 9)) + str(random.randint(0, 9))
+    phone_number = phone_number + ' ' + str(random.randint(0, 9)) + str(random.randint(0, 9)) + str(random.randint(0, 9))
+    phone_number = phone_number + ' ' + str(random.randint(0, 9)) + str(random.randint(0, 9))
+    phone_number = phone_number + ' ' + str(random.randint(0, 9)) + str(random.randint(0, 9))
+    return phone_number
+
+
+def create_json_data(params, format):
+    """
+    documentation     
+    reate_json_data(params, format)
+    """
+
+    count_item = int(params['count_item'])
+    if not count_item:
+        return ['error']
+
+    print(params)
+    surnames = None
+    first_names = None
+    result_data = []
+    if params['surname'] == 'on':
+        surnames = ['surname'] + ['Aaaaa'] * count_item
+        result_data.append(surnames)
+    if params['first_name'] == 'on':
+        first_names = ['first_name'] + ['Bbbb'] * count_item
+        result_data.append(first_names)
+    if params['patronymic'] == 'on':
+        patronymics = ['patronymic'] + ['Ccccc'] * count_item
+        result_data.append(patronymics)
+    if params['email']['email'] == 'on':
+        if params['email']['email_method'] == 'email-gen':
+            email_list = []
+            for _ in range(count_item):
+                email_list.append(generate_emale_random())
+        elif params['email']['email_method'] == 'email-name' and surnames and first_names:
+            email_list = []
+            for fn, sn in zip(first_names,surnames):
+                email_list.append(generate_emale_name(fn, sn))            
+            pass
+        else:
+            email_list = ['aaa@mail.ru'] * count_item
+            pass
+        email_list = ['email'] + email_list
+        result_data.append(email_list)
+    if params['phone']['phone'] == 'on':
+        if params['phone']['phone_method'] == 'phone-gen':
+            phone_list = []
+            for _ in range(count_item):
+                phone_list.append(generate_phone_random())
+        else:
+            phone_list = ['8 900 100 22 33'] * count_item
+        phones = ['phone'] + phone_list
+        result_data.append(phones)
+    if params['address']['address'] == 'on':
+        addresses_list  = ['Россия'] * count_item
+        if params['address']['address_city']:
+            addresses_list = [i + ', Cccity' for i in addresses_list]
+            pass
+        if params['address']['address_street']:
+            addresses_list = [i + ', Ssstreet' for i in addresses_list]
+            pass
+        if params['address']['address_house']:
+            addresses_list = [i + f', {random.randint(1, 300)}' for i in addresses_list]
+            pass
+        if params['address']['address_apartment']:
+            addresses_list = [i + f', {random.randint(1, 100)}' for i in addresses_list]
+            pass
+            # 'address_city': True, 'address_street': True, 'address_house': True, 'address_apartment': True}
+        addresses = ['addresses'] + addresses_list
+        result_data.append(addresses)
+    
+    if format == 'csv':
+        data = list(zip(*result_data))
+        buffer = StringIO()
+        writer = csv.writer(buffer, delimiter=";", quoting=csv.QUOTE_MINIMAL)
+        writer.writerows(data)
+        
+        buffer.seek(0)
+        bytes_buffer = BytesIO(buffer.getvalue().encode("utf-8"))
+        return bytes_buffer
+    else:
+        _data = list(zip(*result_data))
+        _data[0] = _data[0] + ('id',)
+
+        data = []
+        for n,i in enumerate(_data[1:]):
+            print(list(zip(_data[0],i + (n,))))
+            data.append(dict(zip(_data[0],i + (n,))))
+        
+        json_data = json.dumps(data, ensure_ascii=False, indent=4)
+        bytes_buffer = BytesIO()
+        bytes_buffer.write(json_data.encode('utf-8'))
+        bytes_buffer.seek(0)
+        return bytes_buffer
+    pass
+
+
 
 @app.route('/index', methods=['GET','POST'])
 @app.route('/', methods=['GET','POST'])
 def index():
     msg = ''
     if request.method == 'POST':
-        if request.get_json() and request.get_json()['format_data'] == 'csv':
-            print('Poosst ========== csv')
-            print(request.get_json())
-            file_path = r'./test/fff.csv'
-            # Отправляем файл с принудительной загрузкой (as_attachment=True)
-            return send_file(file_path, 
+        params = request.get_json()
+        if params and params['format_data'] == 'csv':
+            file_csv =  create_json_data(params, 'csv') # r'./test/fff.csv'
+
+            return send_file(file_csv, 
                             mimetype='text/csv',
                             as_attachment=True, 
-                            download_name='fff.csv')
+                            download_name='result.csv')
 
-        elif request.get_json() and request.get_json()['format_data'] == 'json':
-            print('Poosst ========== json')
-            print(request.get_json())
-            file_path = r'./test/jj.json'
-            # Отправляем файл с принудительной загрузкой (as_attachment=True)
-            return send_file(file_path, 
+        elif params and params['format_data'] == 'json':
+            file_json = create_json_data(params, 'json') #r'./test/jj.json'
+
+            return send_file(file_json, 
                             mimetype='text/json',
                             as_attachment=True, 
-                            download_name='jj.json')
+                            download_name='result.json')
         else:
             return render_template('page404.html'), 404
 
@@ -291,3 +415,11 @@ if __name__ == "__main__":
   app.run(debug=True)
 
 
+    # {'ligin': 'test_user', 
+    # 'surname': 'off', 
+    # 'first_name': 'off', 
+    # 'patronymic': 'off', 
+    # 'email': {'email': 'on',  email_method 'email-name': 'email-gen' 'email-db'}, 
+    # 'phone': {'phone': 'on', 'phone-db': 'phone-gen'}, 
+    # 'address': {'address': 'on', 'address_city': True, 'address_street': True, 'address_house': True, 'address_apartment': True}, 
+    # 'count_item': '3'
