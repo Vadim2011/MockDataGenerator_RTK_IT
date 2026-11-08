@@ -4,16 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width">
     <meta name="description" content="Проект генерация данных">
-    <link rel="shortcut icon" href="img/favicon.png" type="image/x-icon">
-    <link rel="stylesheet" href="style/style.css">
-    <script src="js/main.js" defer></script>
+    <link rel="shortcut icon" href=" {{ url_for('static', filename='img/favicon.png')}} " type="image/x-icon">
+    <link rel="stylesheet" href=" {{ url_for('static', filename='style/style.css')}} ">
+    <script src="{{ url_for('static', filename='js/main.js')}}" defer></script>
     <title>Проект генерация данных</title>
   </head>
 <body>
   <div class="wrapper">
     <header class="header">
       <div class="header__logo logo">
-        <a href="/"><img class="logo__img" src="img/MDG _logo.svg" alt="logo"></a>
+        <a href="/"><img class="logo__img" src=" {{ url_for('static', filename='img/MDG_logo.svg')}} " alt="logo"></a>
       </div>
       <div class="header__title">
         <span> Учебный проект, по генерации данных для БД</span><br>

@@ -8,7 +8,7 @@ from io import StringIO, BytesIO
 
 
 
-app = Flask(__name__, static_folder='assets')
+app = Flask(__name__)
 app.config['SECRET_KEY'] = '1234asdfasdfasdf'
 mimetypes.add_type('application/javascript', '.js')
 
