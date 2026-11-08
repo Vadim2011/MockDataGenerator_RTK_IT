@@ -13,12 +13,29 @@ app.config['SECRET_KEY'] = '1234asdfasdfasdf'
 mimetypes.add_type('application/javascript', '.js')
 
 
+# ---------------------------------------------
+# SELECT * FROM user_connections WHERE id_user = 
+# (SELECT id FROM users_ WHERE name = 'test_1');
+
+# ---------------------------------------------
+# SELECT * FROM cities ORDER BY RANDOM() LIMIT 5;
+# SELECT * FROM street ORDER BY RANDOM() LIMIT 5;
+
+# ---------------------------------------------
+# SELECT * FROM first_name ORDER BY RANDOM() LIMIT 5;
+# SELECT * FROM surname ORDER BY RANDOM() LIMIT 5;
+# SELECT * FROM patronymic ORDER BY RANDOM() LIMIT 5;
+
+
 def get_connect_db():
-  conn = psycopg2.connect(host="localhost",
-                          database='mdg_db',
-                          user='mdg',
-                          password='rtkuser')
-  return conn
+    with open('password.txt') as f:
+        password = f.read()
+
+    conn = psycopg2.connect(host="localhost",
+                            database='mdg_db',
+                            user='mdg',
+                            password=password)
+    return conn
 
 
 def generate_emale_random(alphabet='aasdfqwer', domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru'], lenght_min=4, lenght_max=12):
