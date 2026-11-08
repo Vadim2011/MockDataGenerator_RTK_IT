@@ -1,5 +1,8 @@
 # word tmp
 ~$*
+pass
+.password*
+password*
 
 # environment
 .env
