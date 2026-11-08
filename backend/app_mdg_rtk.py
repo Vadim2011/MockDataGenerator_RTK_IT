@@ -15,8 +15,8 @@ mimetypes.add_type('application/javascript', '.js')
 
 def get_connect_db():
   conn = psycopg2.connect(host="localhost",
-                          database='mdg',
-                          user='rtkuser',
+                          database='mdg_db',
+                          user='mdg',
                           password='rtkuser')
   return conn
 
