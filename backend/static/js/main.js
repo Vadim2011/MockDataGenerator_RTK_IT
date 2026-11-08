@@ -24,27 +24,53 @@ buttonsMenu.forEach(i => {
 
 // Получение данных от сервера ______________________________________
     // Function fetch method POST____________
-async function sendData(params) {
+
+async function downloadFile(params) {
   try {
     const response = await fetch('/', {
-      method: 'POST', // Указываем метод
+      method: 'POST',
       headers: {
-        'Content-Type': 'application/json;charset=utf-8' // Заголовки
+        'Content-Type': 'application/json',
+        // 'Authorization': 'Bearer token' // если нужно
       },
       body: JSON.stringify(params)
     });
 
     if (!response.ok) {
-      throw new Error(`Ошибка HTTP: ${response.status}`);
+      throw new Error(`HTTP error: ${response.status}`);
     }
 
-    const result = await response.json(); // Читаем ответ сервера в формате JSON
-    console.log('Ответ сервера:', 'result');
+    // Получаем имя файла из заголовка Content-Disposition
+    const contentDisposition = response.headers.get('Content-Disposition');
+    let filename = 'file';
+    if (contentDisposition) {
+      const match = contentDisposition.match(/filename\*?=(?:UTF-8'')?["']?([^;"']+)/i);
+      if (match) filename = decodeURIComponent(match[1]);
+    }
+
+    // Получаем файл как Blob
+    const blob = await response.blob();
+
+    // Создаём ссылку и инициируем скачивание
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+
+    // Убираем за собой
+    link.remove();
+    window.URL.revokeObjectURL(downloadUrl);
+
+    return blob;
   } catch (error) {
-    console.error('Ошибка при отправке:', error);
+    console.error('Ошибка скачивания файла:', error);
+    throw error;
   }
 }
 
+    // Function send params to function download____________
 function getFileData() {
   
   const params = {
@@ -71,10 +97,7 @@ function getFileData() {
     format_data: document.querySelector('input[name="format"]:checked').value,
   }
 
-  // sendData(params)
-
-
-  console.log(params);
+  downloadFile(params)
 
 }
 
@@ -83,62 +106,6 @@ let buttonGetFile = document.querySelector('.get-data__file');
 let buttonGetHystory = document.querySelector('.get-data__history');
 
 buttonGetFile.addEventListener('click', getFileData);
-
-// fetch('путь/к/файлу.json')
-//   .then(response => {
-//     // Проверяем статус ответа (успех или ошибка)
-//     if (!response.ok) {
-//       throw new Error(`HTTP error! Status: ${response.status}`);
-//     }
-//     // Распарсиваем тело ответа как JSON
-//     return response.json();
-//   })
-//   .then(data => {
-//     console.log(data); // Готово! Данные в формате JavaScript
-//   })
-//   .catch(error => {
-//     console.error('Ошибка:', error); // Обработка ошибок
-//   });
-
-
-
-
-//<input type="text" name="login" id="login" value="test_user"></input>
-
-// Сервер
-//  Content-Type: text/csv; charset=utf-8
-// Content-Disposition: attachment; filename="data.csv"
-
-/* 
-"count-item"
-'login-inpu'
-
-"surname" data-switch="on"
-"first-name" data-switch="on"
-"patronymic" data-switch="on"
-"email" data-switch="on"
-"phone" data-switch="on"
-"address" data-switch="on"
-*/
-
-/*
-type="radio" name="email" value="email-gen" checked
-type="radio" name="email" value="email-db"
-type="radio" name="email" value="email-name"
-
-type="radio" name="phone" value="phone-gen" checked
-type="radio" name="phone" value="phone-db"
-
-type="checkbox" name="city" value="city" checked
-type="checkbox" name="street" value="street" checked
-type="checkbox" name="home" value="home" checked
-type="checkbox" name="aparment" value="aparment" checked
-*/
-
-/*
-type="radio" name="format" value="csv" checked>
-type="radio" name="format" value="json">
-*/
 
 //___________________________________________________________________
 

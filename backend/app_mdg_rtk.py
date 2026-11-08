@@ -1,7 +1,7 @@
 import os, csv, json
 from datetime import datetime
 
-from flask import Flask, render_template, url_for, request, flash, redirect, session, make_response, jsonify
+from flask import Flask, render_template, url_for, request, flash, redirect, session, make_response, jsonify, send_file 
 import mimetypes
 import psycopg2
 from io import StringIO, BytesIO
@@ -15,180 +15,56 @@ mimetypes.add_type('application/javascript', '.js')
 
 def get_connect_db():
   conn = psycopg2.connect(host="localhost",
-                          database='hroffice',
-                          user='hruser',
-                          password='hruser')
+                          database='mdg',
+                          user='rtkuser',
+                          password='rtkuser')
   return conn
-
+# send_file(
+#     path_or_file: 'os.PathLike[t.AnyStr] | str | t.IO[bytes]',
+#     mimetype: 'str | None' = None,
+#     as_attachment: 'bool' = False,
+#     download_name: 'str | None' = None,
+#     conditional: 'bool' = True,
+#     etag: 'bool | str' = True,
+#     last_modified: 'datetime | int | float | None' = None,
+#     max_age: 'None | (int | t.Callable[[str | None], int | None])' = None    
+# )
 
 @app.route('/index', methods=['GET','POST'])
 @app.route('/', methods=['GET','POST'])
 def index():
-  msg = ''
-  if request.method == 'POST':
-    print(request.form)
-    if request.form['role_'] == 'hr' and \
-        request.form['passw'] == '123':
-      return render_template('menu2.html')
+    msg = ''
+    if request.method == 'POST':
+        if request.get_json() and request.get_json()['format_data'] == 'csv':
+            print('Poosst ========== csv')
+            print(request.get_json())
+            file_path = r'./test/fff.csv'
+            # Отправляем файл с принудительной загрузкой (as_attachment=True)
+            return send_file(file_path, 
+                            mimetype='text/csv',
+                            as_attachment=True, 
+                            download_name='fff.csv')
 
-    elif  request.form['role_'] == 'manager' and \
-        request.form['passw'] == '321':
-      return render_template('menu1.html')
+        elif request.get_json() and request.get_json()['format_data'] == 'json':
+            print('Poosst ========== json')
+            print(request.get_json())
+            file_path = r'./test/jj.json'
+            # Отправляем файл с принудительной загрузкой (as_attachment=True)
+            return send_file(file_path, 
+                            mimetype='text/json',
+                            as_attachment=True, 
+                            download_name='jj.json')
+        else:
+            return render_template('page404.html'), 404
 
-    else:
-      msg = 'Ошибка логин или пароль'
-
-  return render_template('index.html', message=msg)
-
-
-# @app.route('/menu1')
-# def menu1():
-#   return render_template('menu1.html')
-
-
-# @app.route('/menu2')
-# def menu2():
-#   return render_template('menu2.html')
-
-
-@app.route('/office', methods=['GET','POST','PUT', 'DELETE'])
-def office():
-  conn = get_connect_db()
-  cur = conn.cursor()
-  table = 'office'
-
-  if request.method == 'POST':
-    try:
-      item = request.get_json() # получаем данные от клиента {'pk':'v1', 'c2': 'v2',...}
-
-      item_columns = tuple(item.keys()) # преобразуем Ключи к виду ('pk', 'c2', 'c3', ...)
-      item_columns = item_columns
-      item_columns = (',').join(item_columns) # преобразуем последов. ключей (колонок) 'c2, c3, ...,cn'
-
-      item_values = tuple(item.values()) # преобразуем Значен к виду ('v1', 'v2', 'v3', ...)
-
-      # формируем запрос INSERT INTO table (c1, c2, c3) VALUES (v1, v2, v3);
-      sql = f"INSERT INTO {table} (" + item_columns + ") "
-      sql =  sql + 'VALUES (' + ('%s,' * len(item_values)).strip(',') + ");"
-      cur.execute(sql, item_values)
-      conn.commit()
-    except:
-      return '<b>Ошибка</b> <br> обработки данных', 400
-  
-  if request.method == 'PUT':
-    try:
-      item = request.get_json() # получаем данные от клиента {'pk':'v1', 'c2': 'v2',...}
-      item_columns = tuple(item.keys()) # преобразуем Ключи к виду ('c1', 'c2', ..., pk)
-      pk_name = item_columns[-1] + '=%s;' # извлекаем pk=%5
-      item_columns = item_columns[:-1] # удаляем pk из последов Ключей
-      item_columns = ('=%s,').join(item_columns) + '=%s' # преобразуем последов. ключей (колонок) 'c2=%s, c3=%s, ...'
-
-      item_values = tuple(item.values()) # преобразуем Значен к виду ('v1', 'v2', 'v3', ...)
-      pk_value = item_values[-1] # извлекаем Знач vpk
-      item_values = item_values[:-1] # удаляем Знач vpk из основной послед
-
-      # формируем запрос UPDATE table SET c1=v1, c2=v2 WHERE id=2;
-      sql = f"UPDATE {table} SET " + item_columns  # "UPDATE table SET c2=%s, c3=%s"
-      sql = sql + ' WHERE ' + pk_name            # "UPDATE table SET c2=%s, c3=%s WHERE pk=%s;" 
-      cur.execute(sql, (*item_values, pk_value)) # "UPDATE table SET c2=%s, c3=%s WHERE pk=%s;", (v2, v3, vpk)
-      conn.commit()
-    except:
-      return '<b>Ошибка</b> <br> обработки данных', 400
-   
-  if request.method == 'DELETE':
-    try:
-      item = request.get_json() # получаем данные от клиента {'pk2':'v1', 'pk2': 'v2',...}
-      item_columns = tuple(item.keys()) # преобразуем Ключи к виду ('pk1', 'pk2', 'pk3', ...)
-      item_columns = ('=%s AND ').join(item_columns) + '=%s;' # преобразуем последов. ключей 'pk1=%s AND c3=%s...'
-
-      item_values = tuple(item.values()) # преобразуем Значен к виду ('v1', 'v2', 'v3', ...)
-
-      # формируем запрос DELETE FROM table WHERE id=1 and k=2;
-      sql = f"DELETE FROM {table}"  # "UPDATE table SET c2=%s, c3=%s"
-      sql = sql + ' WHERE ' + item_columns            # "UPDATE table SET c2=%s, c3=%s WHERE pk=%s;" 
-  
-      cur.execute(sql, item_values) # "DELETE FROM table WHERE pk1=%s AND pk2=%s;", (v1, v2)
-      conn.commit()
-    except:
-      return '<b>Ошибка</b> <br> обработки данных', 400
-
-  cur.execute('SELECT * FROM office;')
-  offices = cur.fetchall()
-  cur.close()
-  conn.close()
-  return render_template('office.html', offices=offices)
+        
+    print('GET ==========')
+    return render_template('index.html')
 
 
-@app.route('/employer', methods=['GET','POST','PUT', 'DELETE'])
-def employer():
-  conn = get_connect_db()
-  cur = conn.cursor()
-  table = 'employer'
-
-  if request.method == 'POST':
-    try:
-      item = request.get_json() # получаем данные от клиента {'pk':'v1', 'c2': 'v2',...}
-
-      item_columns = tuple(item.keys()) # преобразуем Ключи к виду ('pk', 'c2', 'c3', ...)
-      item_columns = item_columns
-      item_columns = (',').join(item_columns) # преобразуем последов. ключей (колонок) 'c2, c3, ...,cn'
-
-      item_values = tuple(item.values()) # преобразуем Значен к виду ('v1', 'v2', 'v3', ...)
-
-      # формируем запрос INSERT INTO table (c1, c2, c3) VALUES (v1, v2, v3);
-      sql = f"INSERT INTO {table} (" + item_columns + ") "
-      sql =  sql + 'VALUES (' + ('%s,' * len(item_values)).strip(',') + ");"
-
-      cur.execute(sql, item_values)
-      conn.commit()
-    except:
-      return '<b>Ошибка</b> <br> обработки данных', 400
-  
-  if request.method == 'PUT':
-    try:
-      item = request.get_json() # получаем данные от клиента {'pk':'v1', 'c2': 'v2',...}
-      item_columns = tuple(item.keys()) # преобразуем Ключи к виду ('pk', 'c2', 'c3', ...)
-      pk_name = item_columns[-1] + '=%s;' # извлекаем pk=%5
-      item_columns = item_columns[:-1] # удаляем pk из последов Ключей
-      item_columns = ('=%s,').join(item_columns) + '=%s' # преобразуем последов. ключей (колонок) 'c2=%s, c3=%s, ...'
-
-      item_values = tuple(item.values()) # преобразуем Значен к виду ('v1', 'v2', 'v3', ...)
-      pk_value = item_values[-1] # извлекаем Знач vpk
-      item_values = item_values[:-1] # удаляем Знач vpk из основной послед
-
-      # формируем запрос UPDATE table SET c1=v1, c2=v2 WHERE id=2;
-      sql = f"UPDATE {table} SET " + item_columns  # "UPDATE table SET c2=%s, c3=%s"
-      sql = sql + ' WHERE ' + pk_name            # "UPDATE table SET c2=%s, c3=%s WHERE pk=%s;" 
-      print(sql,(*item_values, pk_value) )
-      cur.execute(sql, (*item_values, pk_value)) # "UPDATE table SET c2=%s, c3=%s WHERE pk=%s;", (v2, v3, vpk)
-      conn.commit()
-    except:
-      return '<b>Ошибка</b> <br> обработки данных', 400
-   
-  if request.method == 'DELETE':
-    try:
-      item = request.get_json() # получаем данные от клиента {'pk2':'v1', 'pk2': 'v2',...}
-      item_columns = tuple(item.keys()) # преобразуем Ключи к виду ('pk1', 'pk2', 'pk3', ...)
-      item_columns = ('=%s AND ').join(item_columns) + '=%s;' # преобразуем последов. ключей 'pk1=%s AND c3=%s...'
-
-      item_values = tuple(item.values()) # преобразуем Значен к виду ('v1', 'v2', 'v3', ...)
-
-      # формируем запрос DELETE FROM table WHERE id=1 and k=2;
-      sql = f"DELETE FROM {table}"  # "UPDATE table SET c2=%s, c3=%s"
-      sql = sql + ' WHERE ' + item_columns            # "UPDATE table SET c2=%s, c3=%s WHERE pk=%s;" 
-
-      cur.execute(sql, item_values) # "DELETE FROM table WHERE pk1=%s AND pk2=%s;", (v1, v2)
-      conn.commit()
-    except:
-      return '<b>Ошибка</b> <br> обработки данных', 400
- 
-  cur.execute('SELECT * FROM employer;')
-  employers = cur.fetchall()
-  cur.execute('SELECT * FROM office;')
-  offices = cur.fetchall()
-  cur.close()
-  conn.close()
-  return render_template('employer.html', employers=employers, offices=offices)
+@app.errorhandler(404)
+def pageNotFound(error):
+    return render_template('page404.html'), 404
 
 
 @app.route('/childemployer', methods=['GET','POST','PUT', 'DELETE'])
@@ -411,14 +287,7 @@ def download(path=None):
   return  response
 
 
-@app.errorhandler(404)
-def pageNotFound(error):
-    return render_template('page404.html'), 404
-
-
-
 if __name__ == "__main__":
   app.run(debug=True)
-
 
 
