@@ -23,7 +23,6 @@ def get_connect_db():
     return conn
 
 
-
 def get_data_from_db(table, count):
   conn = get_connect_db()
   cur = conn.cursor()
