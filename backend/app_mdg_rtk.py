@@ -1,7 +1,7 @@
 import os, csv, json, random, string
 from datetime import datetime
 
-from flask import Flask, render_template, url_for, request, flash, redirect, session, make_response, jsonify, send_file 
+from flask import Flask, render_template, request, flash, make_response, jsonify, send_file
 import mimetypes
 import psycopg2
 from io import StringIO, BytesIO
@@ -9,22 +9,7 @@ from transliterate import translit
 
 
 app = Flask(__name__)
-app.config['SECRET_KEY'] = '1234asdfasdfasdf'
 mimetypes.add_type('application/javascript', '.js')
-
-
-# ---------------------------------------------
-# SELECT * FROM user_connections WHERE id_user = 
-# (SELECT id FROM users_ WHERE name = 'test_1');
-
-# ---------------------------------------------
-# SELECT * FROM cities ORDER BY RANDOM() LIMIT 5;
-# SELECT * FROM street ORDER BY RANDOM() LIMIT 5;
-
-# ---------------------------------------------
-# SELECT * FROM first_name ORDER BY RANDOM() LIMIT 5;
-# SELECT * FROM surname ORDER BY RANDOM() LIMIT 5;
-# SELECT * FROM patronymic ORDER BY RANDOM() LIMIT 5;
 
 
 def get_connect_db():
@@ -38,7 +23,7 @@ def get_connect_db():
     return conn
 
 
-# запос к БД
+
 def get_data_from_db(table, count):
   conn = get_connect_db()
   cur = conn.cursor()
@@ -46,13 +31,12 @@ def get_data_from_db(table, count):
   data = cur.fetchall()
   cur.close()
   conn.close()
-
   return data
 
 
 def generate_emale_random(alphabet='aasdfqwer', domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru'], lenght_min=4, lenght_max=12):
     """
-        documentation     
+        documentation
         generate_emale_random(alphabet='aasdfqwer', domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru'], lenght_min=4, lenght_max=12)
     """
 
@@ -64,7 +48,7 @@ def generate_emale_random(alphabet='aasdfqwer', domain=['mail.ru', 'gmail.com', 
 
 def generate_emale_name(first_name, surname,domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru']):
     """
-        documentation     
+        documentation
         generate_emale_name(first_name, surname,domain=['mail.ru', 'gmail.com', 'yandex.ru', 'vk.com','rambler.ru'])
     """
 
@@ -83,7 +67,7 @@ def generate_emale_name(first_name, surname,domain=['mail.ru', 'gmail.com', 'yan
 
 def generate_phone_random():
     """
-      documentation     
+      documentation
       generate_phone_random()
     """
 
@@ -96,7 +80,7 @@ def generate_phone_random():
 
 def create_json_data(params, format):
     """
-    documentation     
+    documentation
     reate_json_data(params, format)
     """
 
@@ -109,22 +93,22 @@ def create_json_data(params, format):
     first_names = None
     result_data = []
     if params['surname'] == 'on':
-        # surnames_db = get_data_from_db('surname', count_item)
-        # print(surnames_db)
+        surnames_db = get_data_from_db('surname', count_item)
+        surnames_db = [i[0] for i in surnames_db]
 
-        surnames = ['surname'] + ['Aaaaa'] * count_item
+        surnames = ['surname'] + surnames_db
         result_data.append(surnames)
     if params['first_name'] == 'on':
-        # first_name_db = get_data_from_db('first_name', count_item)
-        # print(first_name_db)
+        first_name_db = get_data_from_db('first_name', count_item)
+        first_name_db = [i[0] for i in first_name_db]
 
-        first_names = ['first_name'] + ['Bbbb'] * count_item
+        first_names = ['first_name'] + first_name_db
         result_data.append(first_names)
     if params['patronymic'] == 'on':
-        # patronymic_db = get_data_from_db('patronymic', count_item)
-        # print(patronymic_db)
+        patronymic_db = get_data_from_db('patronymic', count_item)
+        patronymic_db = [i[0] for i in patronymic_db]
 
-        patronymics = ['patronymic'] + ['Ccccc'] * count_item
+        patronymics = ['patronymic'] + patronymic_db
         result_data.append(patronymics)
     if params['email']['email'] == 'on':
         if params['email']['email_method'] == 'email-gen':
@@ -133,8 +117,8 @@ def create_json_data(params, format):
                 email_list.append(generate_emale_random())
         elif params['email']['email_method'] == 'email-name' and surnames and first_names:
             email_list = []
-            for fn, sn in zip(first_names,surnames):
-                email_list.append(generate_emale_name(fn, sn))            
+            for fn, sn in zip(first_names[1:],surnames[1:]):
+                email_list.append(generate_emale_name(fn, sn))
             pass
         else:
             email_list = ['aaa@mail.ru'] * count_item
@@ -153,15 +137,14 @@ def create_json_data(params, format):
     if params['address']['address'] == 'on':
         addresses_list  = ['Россия'] * count_item
         if params['address']['address_city']:
-            # cities_db = get_data_from_db('cities', count_item)
-            # print(patronymic_db)
-            addresses_list = [i + ', Cccity' for i in addresses_list]
+            cities_db = get_data_from_db('cities', count_item)
+            cities_db = [i[0] for i in cities_db]
+            addresses_list = [addresses_list[i] + ',' + cities_db[i] for i in range(len(addresses_list))]
 
         if params['address']['address_street']:
-            # street_db = get_data_from_db('street', count_item)
-            # print(street_db)
-
-            addresses_list = [i + ', Ssstreet' for i in addresses_list]
+            street_db = get_data_from_db('street', count_item)
+            street_db = [i[0] for i in street_db]
+            addresses_list = [addresses_list[i] + ',' + street_db[i] for i in range(len(addresses_list))]
 
         if params['address']['address_house']:
             addresses_list = [i + f', {random.randint(1, 300)}' for i in addresses_list]
@@ -169,16 +152,15 @@ def create_json_data(params, format):
         if params['address']['address_apartment']:
             addresses_list = [i + f', {random.randint(1, 100)}' for i in addresses_list]
 
-            # 'address_city': True, 'address_street': True, 'address_house': True, 'address_apartment': True}
         addresses = ['addresses'] + addresses_list
         result_data.append(addresses)
-    
+
     if format == 'csv':
         data = list(zip(*result_data))
         buffer = StringIO()
         writer = csv.writer(buffer, delimiter=";", quoting=csv.QUOTE_MINIMAL)
         writer.writerows(data)
-        
+
         buffer.seek(0)
         bytes_buffer = BytesIO(buffer.getvalue().encode("utf-8"))
         return bytes_buffer
@@ -189,7 +171,7 @@ def create_json_data(params, format):
         data = []
         for n,i in enumerate(_data[1:]):
             data.append(dict(zip(_data[0],i + (n,))))
-        
+
         json_data = json.dumps(data, ensure_ascii=False, indent=4)
         bytes_buffer = BytesIO()
         bytes_buffer.write(json_data.encode('utf-8'))
@@ -202,29 +184,27 @@ def create_json_data(params, format):
 @app.route('/index', methods=['GET','POST'])
 @app.route('/', methods=['GET','POST'])
 def index():
-    msg = ''
     if request.method == 'POST':
         params = request.get_json()
         if params and params['format_data'] == 'csv':
             file_csv =  create_json_data(params, 'csv') # r'./test/fff.csv'
 
-            return send_file(file_csv, 
+            return send_file(file_csv,
                             mimetype='text/csv',
-                            as_attachment=True, 
+                            as_attachment=True,
                             download_name='result.csv')
 
         elif params and params['format_data'] == 'json':
-            file_json = create_json_data(params, 'json') 
+            file_json = create_json_data(params, 'json')
 
-            return send_file(file_json, 
+            return send_file(file_json,
                             mimetype='text/json',
-                            as_attachment=True, 
+                            as_attachment=True,
                             download_name='result.json')
         else:
             return render_template('page404.html'), 404
 
-        
-    print('GET ==========')
+
     return render_template('index.html')
 
 
@@ -237,5 +217,4 @@ def pageNotFound(error):
 
 
 if __name__ == "__main__":
-  app.run(debug=True)
-
+    app.run(debug=True)
